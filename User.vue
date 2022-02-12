@@ -1,3 +1,4 @@
+<!-- 在User文件夹下还有一个Info文件夹未上传，不影响主功能 -->
 <template>
 	<view>
 		<button class="user_row">
