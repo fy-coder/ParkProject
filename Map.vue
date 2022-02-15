@@ -39,6 +39,10 @@
 				charge:[],
 			}
 		},
+		onShow() {//从order切换回来时不应该更新
+			this.update_location();
+			this.update_park();
+		},
 		methods: {
 			callouttap(e){
 				//console.log(e)
@@ -51,7 +55,7 @@
 				var that=this;
 				//console.log(i);
 				var idx=i.target.dataset.id;
-				console.log(that.parkingLot[idx].latitude);
+				// console.log(that.parkingLot[idx].latitude);
 				that.X=that.parkingLot[idx].latitude;
 				that.Y=that.parkingLot[idx].longitude;
 			},
@@ -80,20 +84,23 @@
 					that._X=e.detail.centerLocation.latitude;
 					that._Y=e.detail.centerLocation.longitude;
 				}
-				// console.log('latitude:'+that._X);
-				// console.log('longitude:'+that._Y);
+				console.log('latitude:'+that._X);
+				console.log('longitude:'+that._Y);
 			},
 			update_location(){
 				var that=this;
+				that.X=that._X;
+				that.Y=that._Y;
 				uni.getLocation({
 					success(res) {
+						console.log(res);
 						that.X=res.latitude;
 						that.Y=res.longitude;
 						that._X=res.latitude;
 						that._Y=res.longitude;
-						//console.log('获取位置成功');
-						// console.log('latitude:'+that.X);
-						// console.log('longitude:'+that.Y);
+						console.log('获取位置成功');
+						console.log('latitude:'+that.X);
+						console.log('longitude:'+that.Y);
 					},
 					fail() {
 						console.log('获取位置失败');
@@ -165,11 +172,7 @@
 					}
 				})
 			},
-		},
-		onTabItemTap(e) {	
-			// update_location()
-			// update_park()
-		},
+		}
 	}
 		
 	
