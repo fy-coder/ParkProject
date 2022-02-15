@@ -1,30 +1,13 @@
-<!-- 在User文件夹下还有一个Info文件夹未上传，不影响主功能 -->
 <template>
 	<view>
-		<button class="user_row">
-			<text>用户id：</text>
-			<text>{{userId}}</text>
-		</button>
-		<button class="user_row">
-			<text>用户名：</text>
-			<text>{{username}}</text>
-		</button>
-		<navigator url="./Info/CarNum"><button class="user_row">
-			<text>车牌号：</text>
-			<text>{{carNum}} &gt</text>
-		</button></navigator>
-		<navigator url="./Info/PhoneNum"><button class="user_row">
-			<text>手机号：</text>
-			<text>{{phoneNum}} &gt</text>
-		</button></navigator>
-		<button class="user_row">
-			<text>注册时间：</text>
-			<text>{{registerTime}}</text>
-		</button>
-		<navigator url="./Info/Password"><button class="user_row">
-			<text>密码：</text>
-			<text>****** &gt</text>
-		</button></navigator>
+		<uni-list border-full="true">
+			<uni-list-item title="用户id:" :rightText="userId"/>
+			<uni-list-item title="用户名:" :rightText="username"/>
+			<uni-list-item title="车牌号:" :rightText="carNum" showArrow="true" clickable="true" to="Info/CarNum"/> 
+			<uni-list-item title="手机号:" :rightText="phoneNum" showArrow="true" clickable="true" to="Info/PhoneNum"/> 
+			<uni-list-item title="注册时间:" :rightText="registerTime"/>
+			<uni-list-item title="密码:" rightText="******" showArrow="true" clickable="true" to="Info/Password"/>
+		</uni-list>
 		<button @click="LogOut" >退出登录</button>
 	</view>
 </template>
@@ -34,91 +17,110 @@
 		data() {
 			return {
 				username:'null',
-				token:'null',
+				token:'',
 				userId:'0',
 				carNum:'未填写',
 				phoneNum:'未填写',
 				registerTime:'null',
-				password:'******',
+				password:'',
 			}
 		},
-		onTabItemTap() {
-			console.log("User onTabItemTap");
-			var that=this
+		onTabItemTap(e) {
+			//console.log(e);
+		},
+		onShow() {
+			var that=this;
 			uni.getStorage({
-				key:'userInfo',
+				key:'username',
 				fail() {
-					uni.showToast({
-						title:'您尚未登录',
-					})
 					uni.navigateTo({
 						url:'/pages/Login/Login',
 					})
 				},
 				success:function(res){
-					console.log('User已登录')
-					that.username=JSON.parse(res.data)
-					//console.log(that.username)
-				},
+					that.username=JSON.parse(res.data);
+					console.log(that.username);
+				}
+			})
+			uni.getStorage({
+				key:'password',
 				fail() {
-					console.log('fail');
+					uni.navigateTo({
+						url:'/pages/Login/Login',
+					})
+				},
+				success:function(res){
+					that.password=JSON.parse(res.data);
+					console.log(that.password);
 				}
 			})
 			uni.getStorage({
 				key:'token',
+				fail() {
+					uni.navigateTo({
+						url:'/pages/Login/Login',
+					})
+				},
 				success:function(res){
-					//console.log(res.data)
-					that.token=res.data
+					that.token=JSON.parse(res.data);
+					//console.log(that.token);
+					uni.request({//获取用户信息
+						url:'http://47.97.90.35:8080/user/findUserByUserName/'+that.username,
+						method:'GET',
+						header:{token:that.token},
+						success: res => {
+							console.log(res);
+							if(res.data.code=='200'){
+								console.log("获取用户信息成功");
+								that.carNum=res.data.data.carNum==null?"未填写":res.data.data.carNum;
+								that.userId=res.data.data.userId;
+								// that.password=res.data.data.password;
+								that.registerTime=res.data.data.registerTime;
+								that.phoneNum=res.data.data.phoneNum==null?"未填写":res.data.data.phoneNum;
+								uni.setStorage({
+									key:'userId',
+									data:res.data.data.userId,
+									complete(data) {
+										console.log('设置userId完成');
+									},
+									fail() {
+										console.log('设置userId失败');
+									}
+								})
+							}else{
+								console.log("获取用户信息失败");
+							}
+						},
+						fail() {
+							console.log("获取用户信息失败2.0");
+						},
+					})
+					
 				},
-				fail() {
-					console.log('fail');
-				}
 			})
-			uni.request({//获取信息
-				url:'http://47.97.90.35:8080/user/findUserByUserName/'+that.username,
-				method:'GET',
-				header:{token:JSON.parse(that.token)},
-				success: res => {
-					if(res.data.code=='200'){
-						console.log("获取用户信息成功");
-						that.carNum=res.data.data.carNum==null?"未填写":res.data.data.carNum;
-						that.userId=res.data.data.userId;
-						that.password=res.data.data.password;
-						that.registerTime=res.data.data.registerTime;
-						that.phoneNum=res.data.data.phoneNum==null?"未填写":res.data.data.phoneNum;
-					}else{
-						console.log("获取用户信息失败");
-					}
-					console.log(res);
-				},
-				fail() {
-					console.log("获取用户信息失败2.0");
-				},
-			})
-			console.log('over');
 		},
 		methods: {
 			LogOut(){
-				console.log("退出登录");
-				var that=this
+				var that=this;
 				uni.request({
 					url:'http://47.97.90.35:8080/logOut',
 					method:'GET',
-					header:{token:JSON.parse(that.token)},
+					header:{token:that.token},
 					success(res) {
-						console.log(res);
+						console.log('退出登录成功');
 						uni.clearStorage();
-						uni.navigateTo({
+						uni.redirectTo({
 							url:'/pages/Login/Login',
 						})
 					},
 					fail() {
-						console.log("退出失败");
+						console.log('退出登录失败');
+					},
+					complete() {
+						console.log('完成');
 					}
 				})
-				
 			}
-			
 		}
 	}
 </script>
