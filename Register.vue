@@ -2,19 +2,13 @@
 	<view>
 		<uni-forms ref="form" :modelValue="formData" :rules="rules">
 			<uni-forms-item name="username">
-				<input  v-model="formData.username" placeholder="请输入用户名" />
+				<uni-easyinput  v-model="formData.username" placeholder="请输入用户名" />
 			</uni-forms-item>
 			<uni-forms-item name="password">
-				<input  v-model="formData.password" placeholder="请输入密码" password=true/>
+				<uni-easyinput  v-model="formData.password" placeholder="请输入密码" type="password"/>
 			</uni-forms-item>
 			<uni-forms-item name="passwordConfirm">
-				<input  v-model="formData.passwordConfirm" placeholder="确认密码" password=true />
-			</uni-forms-item>
-			<uni-forms-item name="phoneNum">
-				<input  v-model="formData.phoneNum" placeholder="请输入手机号" type="number"/>
-			</uni-forms-item>
-			<uni-forms-item name="carNum">
-				<input  v-model="formData.carNum" placeholder="请输入车牌号" />
+				<uni-easyinput  v-model="formData.passwordConfirm" placeholder="确认密码" type="password" />
 			</uni-forms-item>
 		</uni-forms>
 		<button @click="submit">注册</button>
@@ -26,92 +20,63 @@
 		data() {
 			return {
 				token:'',
-				isSuccess:false,
 				formData:{
 					username:'',
 					password:'',
 					passwordConfirm:'',
-					phoneNum:'',
-					carNum:'',
 				},
-				rules:{}
-				// rules:{
-				// 	username:{
-				// 		rules:[
-				// 			{
-				// 				required:true,
-				// 				errorMessage:"请输入用户名",
-				// 			},
-				// 			{
-				// 				maxLength:8,
-				// 				errorMessage:"用户名不能超过8个字符",
-				// 			},
-				// 			{
-				// 				minLength:3,
-				// 				errorMessage:"用户名不应少于3个字符"
-				// 			}
-				// 		]
-				// 	},
-				// 	password:{
-				// 		rules:[
-				// 			{
-				// 				required:true,
-				// 				errorMessage:"请输入密码",
-				// 			},
-				// 			{
-				// 				minLength:6,
-				// 				errorMessage:"密码应长于6个字符",
-				// 			},
-				// 			{
-				// 				maxLength:15,
-				// 				errorMessage:"密码不应长于15个字符"
-				// 			},
-				// 		]
-				// 	},
-				// 	passwordConfirm:{
-				// 		rules:[
-				// 			{
-				// 				required:true,
-				// 				errorMessage:"请确认密码",
-				// 			},
-				// 			{
-				// 				validateFunction:function(rule,value,data,callback){
-				// 					if(value!=data.password)
-				// 					{
-				// 						callback('两次密码输入不一致')
-				// 					}
-				// 					return true
-				// 				}
-				// 			}
-				// 		]
+				rules:{
+					username:{
+						rules:[
+							{
+								required:true,
+								errorMessage:"请输入用户名",
+							},
+							{
+								maxLength:8,
+								errorMessage:"用户名不能超过8个字符",
+							},
+							{
+								minLength:3,
+								errorMessage:"用户名不应少于3个字符"
+							}
+						]
+					},
+					password:{
+						rules:[
+							{
+								required:true,
+								errorMessage:"请输入密码",
+							},
+							{
+								minLength:6,
+								errorMessage:"密码应长于6个字符",
+							},
+							{
+								maxLength:15,
+								errorMessage:"密码不应长于15个字符"
+							},
+						]
+					},
+					passwordConfirm:{
+						rules:[
+							{
+								required:true,
+								errorMessage:"请确认密码",
+							},
+							{
+								validateFunction:function(rule,value,data,callback){
+									if(value!=data.password)
+									{
+										callback('两次密码输入不一致')
+									}
+									return true
+								}
+							}
+						]
 						
-				// 	},
-				// 	phoneNum:{
-				// 		rules:[
-				// 			{
-				// 				required:true,
-				// 				errorMessage:"请输入手机号",
-				// 			},
-				// 			{
-				// 				minLength:11,
-				// 				errorMessage:"手机号应长于11个字符",
-				// 			}
-				// 		]
-				// 	},
-				// 	carNum:{
-				// 		rules:[
-				// 			{
-				// 				required:true,
-				// 				errorMessage:"请输入车牌号",
-				// 			},
-				// 			{
-				// 				minLength:7,
-				// 				errorMessage:"车牌号应长于7个字符",
-				// 			}
-				// 		]
-				// 	}
-				// }
-				
+					},
+				}
 			}
 		},
 		onReady() {
@@ -119,57 +84,55 @@
 		},
 		methods: {
 			submit:function(){
-				console.log("submit");
-				console.log("ok");
-				if(this.$refs.form.validate()){
-					console.log("true");
-				}else{
-					console.log("false");
+				console.log("注册");
+				this.$refs.form.validate().then(res=>{
+					console.log("ok");
+					uni.request({
+						url:'http://47.97.90.35:8080/register',
+						data:JSON.stringify(res),
+						method:'POST',
+						success(r) {
+							console.log(r);
+							if(r.data.code=="200")
+							{
+								if(r.data.msg=="注册成功"){
+									uni.showToast({
+										title:'注册成功',//未实现注册后自动登录
+										icon:'none',
+										complete() {//页面切换太快这弹窗基本看不见
+											uni.redirectTo({
+												url:'../Login/Login'
+											});
+										}
+									});
+										
+								}else{
+									uni.showToast({
+										title:'用户名重复',
+										icon:'error',
+									});
+								}					
+							}
+							else{
+								uni.showToast({
+									title:'注册失败',
+									icon:'error',
+								});
+							}
+						},
+						fail(){
+							uni.showToast({
+								title:'网络错误，请重试',
+								icon:'error'
+							});
+						}
+				 	})
 				}
-				console.log("ok");
-				//this.$refs.form.validate().then(res=>{
-				//	console.log("ok");
-				// 	uni.request({
-				// 		url:'http://47.97.90.35:8080/register',
-				// 		data:JSON.stringify(res),
-				// 		method:'POST',
-				// 		success(res) {
-				// 			if(res.data.code=="200")
-				// 			{
-				// 				uni.showToast({
-				// 					title:'注册成功,正在登录',
-				// 					icon:'none',
-				// 				});
-				// 				this.token=res.data.data.token;
-				// 				this.isSuccess=true;
-				// 				uni.setStorage({
-				// 					key:'userInfo',
-				// 					data:JSON.stringify(res),
-				// 					success() {
-				// 						console.log('success');
-				// 					}
-				// 				})
-				// 			}
-				// 			else{
-				// 				uni.showToast({
-				// 					title:'用户已存在',
-				// 					icon:'error'
-				// 				});
-				// 			}
-				// 		},
-				// 		fail(){
-				// 			uni.showToast({
-				// 				title:'网络错误，请重试',
-				// 				icon:'none'
-				// 			});
-				// 		}
-				// // 	})
-				// }
-				// ).catch(err=>{
-				// 	console.log("ok");
-				// 	console.log(err);
-				// })
-			}
+				).catch(err=>{
+					console.log("no");
+					console.log(err);
+				})
+			},
 		}
 	}
 </script>
