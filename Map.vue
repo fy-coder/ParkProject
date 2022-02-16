@@ -7,11 +7,23 @@
 		</view>
 		<map id="Mymap"  
 			style="width:750rpx; height: 750rpx;"
-			:latitude="X"
-			:longitude="Y"
-			scale="11" 
-			@regionchange="regionchange"
-			show-location="true" :markers="parklot" @callouttap="callouttap">
+			
+			scale="16" 
+			
+			show-compass="true"
+			enable-rotate="true"
+			enable-overlooking="true"
+			enable-traffic="true"
+			enable-poi="true"
+			enable-building="true"
+			show-location="true"
+			
+			
+			:markers="parklot" 
+			:circles="circle"
+			
+			
+			@markertap="markertap">
 		</map>
 		<view v-for="(item,index) in parklot" :key="index" >
 			<button @click="openOrder" :data-id="item.id">id:{{item.id}}{{item.description}}{{item.distance}}km</button>
@@ -23,41 +35,54 @@
 	export default {
 		data() {
 			return {
-				id:0,
 				token:'',
-				X:32,//
-				Y:112,
-				_X:32,//（响应拖动事件）
-				_Y:112,
-				// latitude:32,//用户中心点
-				// longitude:112
 				parkingLot:[],//停车场经纬度信息
-				parklot:[],//停车场完整信息（按距离排序）
-				description:'',
-				distance:'',
-				spare:'',
-				charge:[],
+				parklot:[],//停车场完整信息（按距离排序）     id等价于该停车场在parkingLot中的下标
+				circle:[],//这是一个圆
+				
 			}
 		},
-		onShow() {//从order切换回来时不应该更新
-			this.update_location();
-			this.update_park();
+		onShow() {
+			var that=this;
+			uni.getStorage({
+				key:'token',
+				success(res) {
+					that.token=res.data;
+					//console.log(that.token);
+					that.update_location();
+				},
+			})
 		},
 		methods: {
-			callouttap(e){
-				//console.log(e)
-				var id=e.detail.markerId;
-				uni.redirectTo({
-					url:'../order/order?id='+id
-				})
+			markertap(e){
+				console.log(e);
+				var that=this;
+				var idx=e.detail.markerId;
+				console.log(that.parkingLot[idx].description);
+				console.log(that.parkingLot[idx].distance);
+				// uni.redirectTo({
+				// 	url:'./Info/Order?id='+id
+				// })
 			},
 			openOrder(i){//跳转到停车场位置
 				var that=this;
 				//console.log(i);
 				var idx=i.target.dataset.id;
-				// console.log(that.parkingLot[idx].latitude);
-				that.X=that.parkingLot[idx].latitude;
-				that.Y=that.parkingLot[idx].longitude;
+				//console.log(that.parkingLot[idx].latitude);
+				var X=that.parkingLot[idx].latitude;
+				var Y=that.parkingLot[idx].longitude;
+				
+				that._map=uni.createMapContext("Mymap",that);
+				that._map.moveToLocation({
+					latitude:X,
+					longitude:Y,
+					success(r) {
+						//console.log('获取位置成功');
+					},
+					fail(){
+						console.log('定位位置失败');
+					},
+				})
 			},
 			Rad(d) {
 				return d * Math.PI / 180.0; //经纬度转换成三角函数中度分表形式。
@@ -78,51 +103,80 @@
 				//s=s.toFixed(2);
 				return s;
 			},
-			regionchange(e){
-				var that=this;
-				if(e.type=='end'){
-					that._X=e.detail.centerLocation.latitude;
-					that._Y=e.detail.centerLocation.longitude;
-				}
-				console.log('latitude:'+that._X);
-				console.log('longitude:'+that._Y);
-			},
 			update_location(){
 				var that=this;
-				that.X=that._X;
-				that.Y=that._Y;
 				uni.getLocation({
 					success(res) {
-						console.log(res);
-						that.X=res.latitude;
-						that.Y=res.longitude;
-						that._X=res.latitude;
-						that._Y=res.longitude;
-						console.log('获取位置成功');
-						console.log('latitude:'+that.X);
-						console.log('longitude:'+that.Y);
+						var X=res.latitude;
+						var Y=res.longitude;
+						that._map=uni.createMapContext("Mymap",that);
+						that._map.moveToLocation({
+							latitude:X,
+							longitude:Y,
+							success(r) {
+								//console.log('获取位置成功');
+								
+							},
+							fail(){
+								console.log('定位位置失败');
+							},
+							complete(){
+								that.circle=[];
+								that.circle[0]={
+													"latitude":X,
+													"longitude":Y,
+													"radius":300,
+													"color":'#00aa00',
+												};
+							}
+						})
+						
+						// that.control[0]={
+						// 					"position":{
+						// 									"left":0,
+						// 									"top":0,
+						// 								},
+						// 					"iconPath":'/static/point.png',
+						// 				};
 					},
 					fail() {
 						console.log('获取位置失败');
+						uni.showToast({
+							title:'请重试',
+							icon:'loading',
+						})
 					}
 				})
 			},
 			update_park(){
 				var that=this;
-				that.X=that._X;
-				that.Y=that._Y;
-				uni.getStorage({
-					key:'token',
-					success(r) {
-						that.token=r.data
+				that._map=uni.createMapContext("Mymap",that);
+				that._map.getCenterLocation({
+					success(res) {
+						console.log(res);
+						var X=res.latitude;
+						var Y=res.longitude;
+						that.circle=[];
+						that.circle[0]={
+											"latitude":X,
+											"longitude":Y,
+											"radius":300,
+											"color":'#00aa00',
+										};
 						uni.request({
 							url:'http://47.97.90.35:8080/findAllParkingLot',
 							method:'GET',
-							header:{token:JSON.parse(that.token)},
+							header:{token:JSON.parse(that.token)},//无语
 							success(res) {
-								//console.log(res.data.data)
+								//console.log(res);
+								if(res.data.code!="200"){
+									console.log("停车场信息获取失败！");
+									return;
+								}
+								//console.log("停车场信息获取成功！");
 								that.parkingLot=res.data.data
-								that.description=res.data.data[0].description
+								console.log(that.parkingLot);
+								//that.description=res.data.data[0].description
 								that.parklot=[];
 								for(var i=0;i<that.parkingLot.length;++i)
 								{
@@ -133,26 +187,44 @@
 									key = 'longitude'
 									value = that.parkingLot[i].longitude
 									p[key]=value
+									// key='parkingLotId'
+									// value=that.parkingLot[i].parkingLotId
+									// p[key]=value
+									// key='category'
+									// value=that.parkingLot[i].category
+									// p[key]=value
+									// key='chargeRuleId'
+									// value=that.parkingLot[i].chargeRuleId
+									// p[key]=value
+									key='description'
+									value=that.parkingLot[i].description
+									p[key]=value
+									
+									key='callout'
+									value={
+												content: 'id:'+i,
+												borderRadius: 5,
+												display: "ALWAYS",
+												padding: 7,
+												bgColor: "#FFFFFF",
+											}
+									p[key]=value
+									key='distance'
+									value=that.getMapDistance(
+										X,Y,that.parkingLot[i].latitude,that.parkingLot[i].longitude)
+									p[key]=value
+									
+									that.parkingLot[i][key]=value
+									
 									key = 'iconPath'
 									value = '/static/point.png'
 									p[key]=value
 									key='id'
 									value=i
 									p[key]=value
-									key='callout'
-									value={content: 'id:'+i,
-												borderRadius: 5,
-												display: "ALWAYS",
-												padding: 7,
-												bgColor: "#FFFFFF"}
-									p[key]=value
-									key='distance'
-									value=that.getMapDistance(
-										that.X,that.Y,that.parkingLot[i].latitude,that.parkingLot[i].longitude)
-									p[key]=value
-									key='description'
-									value=res.data.data[i].description
-									p[key]=value
+									
+									
+									
 									that.parklot.push(p)
 									//console.log(p)
 								}
@@ -167,10 +239,11 @@
 							}
 						})
 					},
-					complete() {
-						console.log('complete')
-					}
+					fail(){
+						console.log('定位失败');
+					},
 				})
+				
 			},
 		}
 	}
