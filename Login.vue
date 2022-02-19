@@ -72,10 +72,35 @@
 									data:JSON.stringify(r.data.data.token),
 									complete(data) {
 										console.log('设置token完成')
-										//console.log(data)
-										console.log('即将跳转');
-										uni.switchTab({//执行顺序有些问题
-											url:'/pages/Map/Map',
+										uni.request({//获取用户信息
+											url:'http://47.97.90.35:8080/user/findUserByUserName/'+that.username,
+											method:'GET',
+											header:{token:res.data.data.token},//无语
+											success: res => {
+												//console.log(res);
+												if(res.data.code=='200'){
+													console.log("获取用户信息成功");
+													uni.setStorage({
+														key:'userId',
+														data:res.data.data.userId,
+														success(data) {
+															console.log('设置userId成功');
+															console.log('即将跳转');
+															uni.switchTab({//执行顺序有些问题
+																url:'/pages/Map/Map',
+															})
+														},
+														fail() {
+															console.log('登录失败');
+														}
+													})
+												}else{
+													console.log('登录失败');
+												}
+											},
+											fail() {
+												console.log('登录失败');
+											},
 										})
 									}
 								})
