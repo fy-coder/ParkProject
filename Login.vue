@@ -1,15 +1,5 @@
 <template>
 	<view class="screen">
-		
-		<!-- <uni-forms @submit="formSubmit">
-			<uni-easyinput class="input" name="username" placeholder="请输入用户名" />
-			<input class="input" name="password" placeholder="请输入密码" password=true/>
-			<uni-easyinput class="input" name="password" type="password" placeholder="请输入密码"></uni-easyinput>
-			<button class="button" form-type="submit" >登录</button>
-		</uni-forms> -->
-		
-		
-		
 		<uni-forms ref="form" :modelValue="formData">
 			<uni-forms-item name="username">
 				<uni-easyinput  v-model="formData.username" placeholder="请输入用户名" />
@@ -20,9 +10,6 @@
 		</uni-forms>
 		<button class="button" @click="submit">登录</button>
 		<navigator class="button"  url="../Register/Register"><button>注册</button></navigator>
-		
-		
-		
 	</view>
 </template>
 
