@@ -80,7 +80,7 @@
 						method:'PUT',
 						success(r) {
 							console.log(r);
-							if(r.data.code=="200")
+							if(r.data.message=="操作成功")
 							{
 								uni.showToast({
 									title:'修改成功',
@@ -99,7 +99,7 @@
 						},
 						fail(){
 							uni.showToast({
-								title:'网络错误，请重试',
+								title:'网络错误',
 								icon:'error'
 							});
 						}
