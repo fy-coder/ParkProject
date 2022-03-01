@@ -1,6 +1,8 @@
 <template>
-	<view class="screen">
-		<uni-forms ref="form" :modelValue="formData">
+	<view>
+		<image src="../../static/parking_PNG7.png" class="Logo"></image>
+		
+		<uni-forms ref="form" :modelValue="formData" class="input">
 			<uni-forms-item name="username">
 				<uni-easyinput  v-model="formData.username" placeholder="请输入用户名" />
 			</uni-forms-item>
@@ -9,7 +11,9 @@
 			</uni-forms-item>
 		</uni-forms>
 		<button class="button" @click="submit">登录</button>
-		<navigator class="button"  url="../Register/Register"><button>注册</button></navigator>
+		<navigator url="../Register/Register"><button class="button">注册</button></navigator>
+		
+		<image src="../../static/background.jpeg"style="margin: 40rpx;"></image>
 	</view>
 </template>
 
@@ -25,6 +29,7 @@
 		},
 		methods: {
 			submit:function(){
+				var that=this;
 				this.$refs.form.validate().then(res=>{
 					// console.log(res);
 					// console.log(JSON.stringify(res));
@@ -34,10 +39,7 @@
 						data:JSON.stringify(res),
 						success: r => {
 							console.log(r);
-							if(r.data.code=="200"){
-								uni.showToast({
-									title: '登录成功'
-								});
+							if(r.data.message=='登录成功'){
 								uni.setStorage({
 									key:'username',
 									data:JSON.stringify(res.username),
@@ -57,36 +59,48 @@
 								uni.setStorage({
 									key:'token',
 									data:JSON.stringify(r.data.data.token),
-									complete(data) {
+									success(data) {
 										console.log('设置token完成')
 										uni.request({//获取用户信息
-											url:'http://47.97.90.35:8080/user/findUserByUserName/'+that.username,
+											url:'http://47.97.90.35:8080/user/findUserByUserName/'+res.username,
 											method:'GET',
-											header:{token:res.data.data.token},//无语
-											success: res => {
-												//console.log(res);
-												if(res.data.code=='200'){
-													console.log("获取用户信息成功");
+											header:{token:r.data.data.token},//无语
+											success: res => {       //这里res是局部变量
+												console.log(res);
+												if(res.data.message=='操作成功'){
+													console.log("获取userId成功");
 													uni.setStorage({
 														key:'userId',
 														data:res.data.data.userId,
 														success(data) {
 															console.log('设置userId成功');
+															uni.showToast({
+																title: '登录成功'
+															});
 															console.log('即将跳转');
-															uni.switchTab({//执行顺序有些问题
+															uni.switchTab({
 																url:'/pages/Map/Map',
 															})
 														},
 														fail() {
-															console.log('登录失败');
+															uni.showToast({
+																title: '设置userId失败',
+																icon: 'error'
+															});
 														}
 													})
 												}else{
-													console.log('登录失败');
+													uni.showToast({
+														title: '获取userId失败',
+														icon: 'error'
+													});
 												}
 											},
 											fail() {
-												console.log('登录失败');
+												uni.showToast({
+													title: '获取userId失败',
+													icon: 'error'
+												});
 											},
 										})
 									}
@@ -101,12 +115,11 @@
 						},
 						fail() {
 							uni.showToast({
-								title:"网络错误，请检查网络"
+								title:"网络错误"
 							})
 						}
 					})
 				}).catch(err=>{
-					console.log('no');
 					console.log(err);
 				})
 			},
@@ -116,116 +129,126 @@
 
 <style>
 	.content {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.logo {
-		height: 200rpx;
-		width: 200rpx;
-		margin-top: 200rpx;
-		margin-left: auto;
-		margin-right: auto;
-		margin-bottom: 50rpx;
-	}
-
-	.text-area {
-		display: flex;
-		justify-content: center;
-	}
-
-	.title {
-		font-size: 36rpx;
-		color: #8f8f94;
-	}
-	.input{
-		margin: 70rpx;
-	
-	}
-	
-	.screen{
-			
-	}
-	.button{
-		margin: 50rpx;
-		font:'Gill Sans', 
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+		}
+		.logo {
+			height: 200rpx;
+			width: 200rpx;
+			margin-top: 200rpx;
+			margin-left: auto;
+			margin-right: auto;
+			margin-bottom: 50rpx;
+		}
+		.text-area {
+			display: flex;
+			justify-content: center;
+		}
+		.title {
+			font-size: 36rpx;
+			color: #8f8f94;
+		}
+		.input{
+			margin: 70rpx;
 		
-	}
-	
-	
-	
-	
-	.nvue-page-root {
-	    background-color: #F8F8F8;
-	    padding-bottom: 20px;
-	}
-	
-	.page-title {
-	    /* #ifndef APP-NVUE */
-	    display: flex;
-	    /* #endif */
-	    flex-direction: row;
-	    justify-content: center;
-	    align-items: center;
-	    padding: 35rpx;
-	}
-	
-	.page-title__wrapper {
-	    padding: 0px 20px;
-	    border-bottom-color: #D8D8D8;
-	    border-bottom-width: 1px;
-	}
-	
-	.page-title__text {
-	    font-size: 16px;
-	    height: 48px;
-	    line-height: 48px;
-	    color: #BEBEBE;
-	}
-	
-	.title {
-	    padding: 5px 13px;
-	}
-	
-	.uni-form-item__title {
-	    font-size: 16px;
-	    line-height: 24px;
-	}
-	
-	.uni-input-wrapper {
-	    /* #ifndef APP-NVUE */
-	    display: flex;
-	    /* #endif */
-	    padding: 8px 13px;
-	    flex-direction: row;
-	    flex-wrap: nowrap;
-	    background-color: #FFFFFF;
-	}
-	
-	.uni-input {
-	    height: 28px;
-	    line-height: 28px;
-	    font-size: 15px;
-	    padding: 0px;
-	    flex: 1;
-	    background-color: #FFFFFF;
-	}
-	
-	.uni-icon {
-	    font-family: uniicons;
-	    font-size: 24px;
-	    font-weight: normal;
-	    font-style: normal;
-	    width: 24px;
-	    height: 24px;
-	    line-height: 24px;
-	    color: #999999;
-	}
-	
-	.uni-eye-active {
-	    color: #007AFF;
-	}
-	
+		}
+		.login{
+			width: 100%;
+			height: 100%;
+			
+		}
+		
+		
+		.button{
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			margin: 50rpx;
+			background-color: #55aaff;
+			font:'Gill Sans', 
+			
+			
+		}
+		.Logo{
+			 margin-top: 50rpx;
+			 margin-left: 300rpx;
+			
+			 width: 125rpx;
+			 height: 125rpx;
+		}
+		
+		
+		
+		.nvue-page-root {
+		    background-color: #F8F8F8;
+		    padding-bottom: 20px;
+		}
+		
+		.page-title {
+		    /* #ifndef APP-NVUE */
+		    display: flex;
+		    /* #endif */
+		    flex-direction: row;
+		    justify-content: center;
+		    align-items: center;
+		    padding: 35rpx;
+		}
+		
+		.page-title__wrapper {
+		    padding: 0px 20px;
+		    border-bottom-color: #D8D8D8;
+		    border-bottom-width: 1px;
+		}
+		
+		.page-title__text {
+		    font-size: 16px;
+		    height: 48px;
+		    line-height: 48px;
+		    color: #BEBEBE;
+		}
+		
+		.title {
+		    padding: 5px 13px;
+		}
+		
+		.uni-form-item__title {
+		    font-size: 16px;
+		    line-height: 24px;
+		}
+		
+		.uni-input-wrapper {
+		    /* #ifndef APP-NVUE */
+		    display: flex;
+		    /* #endif */
+		    padding: 8px 13px;
+		    flex-direction: row;
+		    flex-wrap: nowrap;
+		    background-color: #FFFFFF;
+		}
+		
+		.uni-input {
+		    height: 28px;
+		    line-height: 28px;
+		    font-size: 15px;
+		    padding: 0px;
+		    flex: 1;
+		    background-color: #FFFFFF;
+		}
+		
+		.uni-icon {
+		    font-family: uniicons;
+		    font-size: 24px;
+		    font-weight: normal;
+		    font-style: normal;
+		    width: 24px;
+		    height: 24px;
+		    line-height: 24px;
+		    color: #999999;
+		}
+		
+		.uni-eye-active {
+		    color: #007AFF;
+		}
 </style>
