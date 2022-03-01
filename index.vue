@@ -12,10 +12,9 @@
 			return {
 				username:'',
 				password:'',
-				token:'',
 			}
 		},
-		onLoad(e) {
+		onLoad(e) {                              //尝试获取本地账号密码，登录后记录token以及userId
 			console.log("index开始加载");
 			var that=this;
 			uni.getStorage({
@@ -61,7 +60,7 @@
 						success: res => {
 							console.log(p);
 							console.log(res);
-							if(res.data.code=="200"){
+							if(res.data.message=="登录成功"){
 								console.log('自动登录成功');
 								uni.setStorage({
 									key:'token',
@@ -75,7 +74,7 @@
 											header:{token:res.data.data.token},//无语
 											success: res => {
 												//console.log(res);
-												if(res.data.code=='200'){
+												if(res.data.message=='操作成功'){
 													console.log("获取用户信息成功");
 													uni.setStorage({
 														key:'userId',
@@ -83,12 +82,12 @@
 														success(data) {
 															console.log('设置userId成功');
 															console.log('即将跳转');
-															uni.switchTab({//执行顺序有些问题
+															uni.switchTab({
 																url:'/pages/Map/Map',
 															})
 														},
 														fail() {
-															console.log('自动登录失败');
+															console.log('设置userId失败');
 															//uni.clearStorage();
 															uni.redirectTo({
 																url:'/pages/Login/Login',
@@ -96,7 +95,7 @@
 														}
 													})
 												}else{
-													console.log('自动登录失败');
+													console.log('获取用户信息失败');
 													//uni.clearStorage();
 													uni.redirectTo({
 														url:'/pages/Login/Login',
@@ -104,7 +103,7 @@
 												}
 											},
 											fail() {
-												console.log('自动登录失败');
+												console.log('获取用户信息失败2.0');
 												//uni.clearStorage();
 												uni.redirectTo({
 													url:'/pages/Login/Login',
@@ -134,8 +133,6 @@
 					})
 				}
 			})
-			
-			
 		},
 		methods: {
 			LogOut(){
